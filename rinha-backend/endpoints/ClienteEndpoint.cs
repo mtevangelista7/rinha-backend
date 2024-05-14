@@ -10,15 +10,30 @@ namespace rinha_backend.endpoints
 {
     public static class ClienteEndpoint
     {
+        // isso aqui funciona só por conta da rinha se mudar um já era
+        private static readonly int[] limite = [0, 100000, 80000, 1000000, 10000000, 500000];
+
         public static void MapClienteEndpoint(this WebApplication app)
         {
-            app.MapPost("clientes/{id}/transacoes", async (HttpContext context, int id) => await AdicionaTransacao(context, id));
+            app.MapPost("clientes/{id:int}/transacoes",
+                async (HttpContext context, int id) => await AdicionaTransacao(context, id));
+            app.MapGet("clientes/{id:int}/extrato",
+                async (int id) => await RecuperaExtrato(id));
         }
 
-        [RequiresUnreferencedCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
-        [RequiresDynamicCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
+        [RequiresUnreferencedCode(
+            "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
+        [RequiresDynamicCode(
+            "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
         private static async Task<IResult> AdicionaTransacao(HttpContext context, int id)
         {
+            RinhaRepository rinhaRepository = new("");
+
+            if (!await rinhaRepository.ClienteExiste(id))
+            {
+                return Results.NotFound();
+            }
+
             var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 
             Transacao transacao;
@@ -37,7 +52,7 @@ namespace rinha_backend.endpoints
                 return Results.UnprocessableEntity();
             }
 
-            if (String.IsNullOrWhiteSpace(transacao.Descricao) || transacao.Descricao.Length > 10)
+            if (string.IsNullOrWhiteSpace(transacao.Descricao) || transacao.Descricao.Length > 10)
             {
                 return Results.UnprocessableEntity();
             }
@@ -47,10 +62,23 @@ namespace rinha_backend.endpoints
                 return Results.UnprocessableEntity();
             }
 
-            ClienteRepository clienteRepository = new("");
-            var result = await clienteRepository.RealizaTransacao(id);
-
+            var result = await rinhaRepository.RealizaOperacao(id, transacao);
+            result.Limite = limite[id];
             return Results.Ok(result);
+        }
+
+        private static async Task<IResult> RecuperaExtrato(int id)
+        {
+            RinhaRepository rinhaRepository = new("");
+
+            if (!await rinhaRepository.ClienteExiste(id))
+            {
+                return Results.NotFound();
+            }
+
+            var extrato = await rinhaRepository.RetornaExtrato(id);
+
+            return Results.Ok(extrato);
         }
     }
 }
