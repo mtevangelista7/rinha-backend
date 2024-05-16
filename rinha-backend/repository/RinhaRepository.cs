@@ -32,7 +32,7 @@ namespace rinha_backend.repository
         public async Task<bool> ClienteExiste(int id)
         {
             await using var dataSource = NpgsqlDataSource.Create(lazy.connectionString);
-            await using var cmd = dataSource.CreateCommand("SELECT * FROM clientes WHERE id = @id");
+            await using var cmd = dataSource.CreateCommand("SELECT * FROM Clientes WHERE id = @id");
             cmd.Parameters.AddWithValue("@id", id);
 
             return (await cmd.ExecuteNonQueryAsync()) != 0;
@@ -54,9 +54,7 @@ namespace rinha_backend.repository
             cmd.Parameters.AddWithValue("@id", id);
 
             await using var reader = await cmd.ExecuteReaderAsync();
-
-            var listTrasacao = new List<Transacao>();
-
+            
             var extrato = new Extrato
             {
                 Saldo = new Saldo()
@@ -75,12 +73,11 @@ namespace rinha_backend.repository
                 extrato.Saldo.Total = reader.GetInt32(4);
                 extrato.Saldo.Limite = reader.GetInt32(5);
 
-                listTrasacao.Add(transacao);
+                extrato.UltimasTransacoes .Add(transacao);
             }
 
             extrato.Saldo.DataExtrato = DateTime.Now;
-            extrato.UltimasTransacoes = listTrasacao;
-
+            
             return extrato;
         }
     }

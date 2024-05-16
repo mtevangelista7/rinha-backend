@@ -5,5 +5,5 @@ namespace rinha_backend.models;
 public class Extrato
 {
     public Saldo Saldo { get; set; }
-    public List<Transacao> UltimasTransacoes { get; set; } = new List<Transacao>(10);
+    public List<Transacao> UltimasTransacoes { get; set; } = new(10);
 }

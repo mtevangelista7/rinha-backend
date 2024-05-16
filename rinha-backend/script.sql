@@ -52,43 +52,38 @@ DECLARE
     saldo_novo INT;
     limite_cliente INT;
 BEGIN
-    -- Busca o saldo do cliente
-    SELECT saldo_inicial
-    INTO saldo_cliente
+    -- busca as informações atuais do cliente
+    SELECT saldo_inicial, limite
+    INTO saldo_cliente, limite_cliente
     FROM Clientes
     WHERE id = id_cliente
     LIMIT 1;
 
-    SELECT limite
-    INTO limite_cliente
-    FROM Clientes
-    WHERE id = id_cliente
-    LIMIT 1;
-
-    -- Se o saldo do cliente for nulo, lança uma exceção
+    -- se o saldo do cliente não foi cadastrado gera erro
     IF saldo_cliente IS NULL THEN 
         RAISE EXCEPTION 'deu errado';
     END IF;
 
-    -- Verifica se há saldo suficiente
-    IF (saldo_cliente - valor_debitar) < limite_cliente THEN
-        RAISE EXCEPTION 'deu errado limite';
+    -- realiza a operação de debito em cima do saldo atual do cliente
+    saldo_novo := valor_debitar - saldo_cliente;
+
+    -- a transação não pode deixar o saldo inconsistente
+    -- então verificamos se o cliente tem limite suficiente antes
+    IF limite_cliente < saldo_novo THEN
+        RAISE EXCEPTION 'cliente não tem limite suficiente para essa transação!!';
     END IF;
 
-    -- Realiza a função
-    saldo_novo := saldo_cliente - valor_debitar;
-
-    -- Atualiza o saldo do cliente
+    -- atualiza o saldo do cliente
     UPDATE Clientes
     SET saldo_inicial = saldo_novo
     WHERE id = id_cliente;
 
-    -- Insere uma nova transação
+    -- insere a nova transação
     INSERT INTO Transacao
         (id_cliente, valor, tipo, descricao, realizada_em)
     VALUES (id_cliente, valor_debitar, 'd', descricao, CURRENT_TIMESTAMP);
 
-    -- Retorna o novo saldo
+    -- retorna o novo saldo
     RETURN saldo_novo;
 END;
 $$ LANGUAGE plpgsql;
@@ -100,32 +95,32 @@ DECLARE
     saldo_cliente INT;
     saldo_novo INT;
 BEGIN
-    -- Busca o saldo do cliente
+    -- busca as informações atuais do cliente
     SELECT saldo_inicial
     INTO saldo_cliente
     FROM Clientes
     WHERE id = id_cliente
     LIMIT 1;
 
-    -- Se o saldo do cliente for nulo, lança uma exceção
+    -- se o saldo do cliente não foi cadastrado gera erro
     IF saldo_cliente IS NULL THEN 
         RAISE EXCEPTION 'deu errado';
     END IF;
 
-    -- Realiza a função
+    -- realiza a função de crédito
     saldo_novo := saldo_cliente + valor_creditar;
 
-    -- Atualiza o saldo do cliente
+    -- atualiza o saldo do cliente
     UPDATE Clientes
     SET saldo_inicial = saldo_novo
     WHERE id = id_cliente;
 
-    -- Insere uma nova transação
+    -- insere uma nova transação
     INSERT INTO Transacao
         (id_cliente, valor, tipo, descricao, realizada_em)
     VALUES (id_cliente, valor_creditar, 'c', descricao, CURRENT_TIMESTAMP);
 
-    -- Retorna o novo saldo
+    -- retorna o novo saldo
     RETURN saldo_novo;
 END;
 $$ LANGUAGE plpgsql;

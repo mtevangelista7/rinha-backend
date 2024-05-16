@@ -63,6 +63,7 @@ namespace rinha_backend.endpoints
 
                 var result = await rinhaRepository.RealizaOperacao(id, transacao);
                 result.Limite = limite[id];
+                
                 return Results.Ok(result);
             }
             catch (Exception exception)
@@ -77,7 +78,7 @@ namespace rinha_backend.endpoints
 
             if (!await rinhaRepository.ClienteExiste(id))
             {
-                return Results.NotFound($"Não achou o cliente {id}");
+                return Results.NotFound($"Não achou o cliente");
             }
 
             var extrato = await rinhaRepository.RetornaExtrato(id);
