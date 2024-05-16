@@ -1,0 +1,66 @@
+version: '3.4'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: Rinha
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./rinha-backend/script.sql:/docker-entrypoint-initdb.d/script.sql
+
+  rinha-backend-1:
+    image: rinha-backend
+    build:
+      dockerfile: rinha-backend/Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=Rinha;Username=myuser;Password=mypassword
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: "200MB"
+
+  rinha-backend-2:
+    image: rinha-backend
+    build:
+      dockerfile: rinha-backend/Dockerfile
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=Rinha;Username=myuser;Password=mypassword
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: "200MB"
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "9999:9999"
+    depends_on:
+      - rinha-backend-1
+      - rinha-backend-2
+    deploy:
+      resources:
+        limits:
+          cpus: "0.17"
+          memory: "10MB"
+
+volumes:
+  postgres_data:

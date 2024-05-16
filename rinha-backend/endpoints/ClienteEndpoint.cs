@@ -5,6 +5,7 @@ using rinha_backend.Models;
 using rinha_backend.repository;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace rinha_backend.endpoints
 {
@@ -21,59 +22,62 @@ namespace rinha_backend.endpoints
                 async (int id) => await RecuperaExtrato(id));
         }
 
-        [RequiresUnreferencedCode(
-            "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
-        [RequiresDynamicCode(
-            "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
         private static async Task<IResult> AdicionaTransacao(HttpContext context, int id)
         {
-            RinhaRepository rinhaRepository = new("");
-
-            if (!await rinhaRepository.ClienteExiste(id))
-            {
-                return Results.NotFound();
-            }
-
-            var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-
-            Transacao transacao;
-
             try
             {
-                transacao = JsonSerializer.Deserialize<Transacao>(body) ?? throw new Exception();
-            }
-            catch (Exception)
-            {
-                return Results.UnprocessableEntity();
-            }
+                RinhaRepository rinhaRepository = new();
 
-            if (transacao.Valor < 0)
-            {
-                return Results.UnprocessableEntity();
-            }
+                if (!await rinhaRepository.ClienteExiste(id))
+                {
+                    return Results.NotFound("Não achou o cliente");
+                }
 
-            if (string.IsNullOrWhiteSpace(transacao.Descricao) || transacao.Descricao.Length > 10)
-            {
-                return Results.UnprocessableEntity();
-            }
+                var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 
-            if (transacao.Tipo != 'c' || transacao.Tipo != 'd')
-            {
-                return Results.UnprocessableEntity();
-            }
+                Transacao transacao;
 
-            var result = await rinhaRepository.RealizaOperacao(id, transacao);
-            result.Limite = limite[id];
-            return Results.Ok(result);
+                try
+                {
+                    transacao = JsonSerializer.Deserialize<Transacao>(body) ?? throw new Exception();
+                }
+                catch (Exception)
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                if (transacao.Valor < 0)
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                if (string.IsNullOrWhiteSpace(transacao.Descricao) || transacao.Descricao.Length > 10)
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                if (!transacao.Tipo.Equals('c') && !transacao.Tipo.Equals('d'))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                var result = await rinhaRepository.RealizaOperacao(id, transacao);
+                result.Limite = limite[id];
+                return Results.Ok(result);
+            }
+            catch (Exception exception)
+            {
+                return Results.UnprocessableEntity(exception.Message);
+            }
         }
 
         private static async Task<IResult> RecuperaExtrato(int id)
         {
-            RinhaRepository rinhaRepository = new("");
+            RinhaRepository rinhaRepository = new();
 
             if (!await rinhaRepository.ClienteExiste(id))
             {
-                return Results.NotFound();
+                return Results.NotFound($"Não achou o cliente {id}");
             }
 
             var extrato = await rinhaRepository.RetornaExtrato(id);
