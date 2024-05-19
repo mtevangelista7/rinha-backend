@@ -44,7 +44,28 @@ BEGIN
 
 END $$;
 
--- Função debitar
+-- buscar extrato
+CREATE OR REPLACE FUNCTION RetornaExtrato(id_cli INT)
+RETURNS TABLE (
+    valor INT,
+    tipo VARCHAR,
+    descricao VARCHAR,
+    realizada_em TIMESTAMP,
+    saldo_inicial INT,
+    limite INT
+) AS $$
+BEGIN
+RETURN QUERY
+SELECT t.valor, t.tipo, t.descricao, t.realizada_em, c.saldo_inicial, c.limite
+FROM Transacao t
+         INNER JOIN Clientes c ON t.id_cliente = c.id
+WHERE t.id_cliente = id_cli
+ORDER BY t.realizada_em DESC
+    LIMIT 10;
+END;
+$$ LANGUAGE plpgsql;
+
+-- função debitar
 CREATE OR REPLACE FUNCTION debitar(id_cliente INT, valor_debitar INT, descricao VARCHAR)
 RETURNS INT AS $$
 DECLARE
@@ -53,40 +74,41 @@ DECLARE
     limite_cliente INT;
 BEGIN
     -- busca as informações atuais do cliente
-    SELECT saldo_inicial, limite
-    INTO saldo_cliente, limite_cliente
-    FROM Clientes
-    WHERE id = id_cliente
+SELECT saldo_inicial, limite
+INTO saldo_cliente, limite_cliente
+FROM Clientes
+WHERE id = id_cliente
     LIMIT 1;
 
-    -- se o saldo do cliente não foi cadastrado gera erro
-    IF saldo_cliente IS NULL THEN 
-        RAISE EXCEPTION 'deu errado';
-    END IF;
+-- se o saldo do cliente não foi cadastrado gera erro
+IF saldo_cliente IS NULL THEN 
+        RAISE EXCEPTION 'Cliente não encontrado';
+END IF;
 
     -- realiza a operação de debito em cima do saldo atual do cliente
-    saldo_novo := valor_debitar - saldo_cliente;
+    saldo_novo := saldo_cliente - valor_debitar;
 
     -- a transação não pode deixar o saldo inconsistente
     -- então verificamos se o cliente tem limite suficiente antes
-    IF limite_cliente < saldo_novo THEN
-        RAISE EXCEPTION 'cliente não tem limite suficiente para essa transação!!';
-    END IF;
+    IF saldo_novo < -limite_cliente THEN
+        RAISE EXCEPTION 'Cliente não tem limite suficiente para essa transação!';
+END IF;
 
     -- atualiza o saldo do cliente
-    UPDATE Clientes
-    SET saldo_inicial = saldo_novo
-    WHERE id = id_cliente;
+UPDATE Clientes
+SET saldo_inicial = saldo_novo
+WHERE id = id_cliente;
 
-    -- insere a nova transação
-    INSERT INTO Transacao
-        (id_cliente, valor, tipo, descricao, realizada_em)
-    VALUES (id_cliente, valor_debitar, 'd', descricao, CURRENT_TIMESTAMP);
+-- insere a nova transação
+INSERT INTO Transacao
+(id_cliente, valor, tipo, descricao, realizada_em)
+VALUES (id_cliente, valor_debitar, 'd', descricao, CURRENT_TIMESTAMP);
 
-    -- retorna o novo saldo
-    RETURN saldo_novo;
+-- retorna o novo saldo
+RETURN saldo_novo;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Função creditar
 CREATE OR REPLACE FUNCTION creditar(id_cliente INT, valor_creditar INT, descricao VARCHAR)

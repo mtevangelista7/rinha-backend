@@ -6,29 +6,30 @@ using rinha_backend.repository;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace rinha_backend.endpoints
 {
     public static class ClienteEndpoint
     {
         // isso aqui funciona só por conta da rinha se mudar um já era
-        private static readonly int[] limite = [0, 100000, 80000, 1000000, 10000000, 500000];
+        private static readonly int[] limites = [0, 100000, 80000, 1000000, 10000000, 500000];
+        private static readonly HashSet<int> clientes = [1, 2, 3, 4, 5];
 
         public static void MapClienteEndpoint(this WebApplication app)
         {
             app.MapPost("clientes/{id:int}/transacoes",
-                async (HttpContext context, int id) => await AdicionaTransacao(context, id));
+                async (HttpContext context, int id) =>
+                    await AdicionaTransacao(context, id));
             app.MapGet("clientes/{id:int}/extrato",
-                async (int id) => await RecuperaExtrato(id));
+                async (int id, IMemoryCache memoryCache) => await RecuperaExtrato(id, memoryCache));
         }
 
         private static async Task<IResult> AdicionaTransacao(HttpContext context, int id)
         {
             try
             {
-                RinhaRepository rinhaRepository = new();
-
-                if (!await rinhaRepository.ClienteExiste(id))
+                if (!clientes.Contains(id))
                 {
                     return Results.NotFound("Não achou o cliente");
                 }
@@ -61,9 +62,9 @@ namespace rinha_backend.endpoints
                     return Results.UnprocessableEntity();
                 }
 
-                var result = await rinhaRepository.RealizaOperacao(id, transacao);
-                result.Limite = limite[id];
-                
+                var result = await RinhaRepository.RealizaOperacao(id, transacao);
+                result.Limite = limites[id];
+
                 return Results.Ok(result);
             }
             catch (Exception exception)
@@ -72,16 +73,23 @@ namespace rinha_backend.endpoints
             }
         }
 
-        private static async Task<IResult> RecuperaExtrato(int id)
+        private static async Task<IResult> RecuperaExtrato(int id, IMemoryCache memoryCache)
         {
-            RinhaRepository rinhaRepository = new();
-
-            if (!await rinhaRepository.ClienteExiste(id))
+            if (!clientes.Contains(id))
             {
-                return Results.NotFound($"Não achou o cliente");
+                return Results.NotFound("Não achou o cliente");
             }
 
-            var extrato = await rinhaRepository.RetornaExtrato(id);
+            var cacheKey = $"rinha{id}";
+
+            if (memoryCache.TryGetValue(cacheKey, out Extrato extrato)) return Results.Ok(extrato);
+
+            extrato = await RinhaRepository.RetornaExtrato(id);
+
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(10));
+
+            memoryCache.Set(cacheKey, extrato, cacheEntryOptions);
 
             return Results.Ok(extrato);
         }
