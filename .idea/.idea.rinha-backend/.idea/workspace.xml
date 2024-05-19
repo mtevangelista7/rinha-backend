@@ -10,12 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b1fcced-bef1-49f9-bff9-99e6b2ebd603" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/docker-compose.override.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.override.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rinha-backend/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/rinha-backend/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rinha-backend/endpoints/ClienteEndpoint.cs" beforeDir="false" afterPath="$PROJECT_DIR$/rinha-backend/endpoints/ClienteEndpoint.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rinha-backend/repository/RinhaRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/rinha-backend/repository/RinhaRepository.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rinha-backend/script.sql" beforeDir="false" afterPath="$PROJECT_DIR$/rinha-backend/script.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rinha-backend - Copy" beforeDir="false" afterPath="$PROJECT_DIR$/rinha-backend - Copy" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,10 +32,18 @@
     &quot;accountId&quot;: &quot;dbd35eab-3733-4620-9f40-d1a8f5d4fe2b&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="mock://F:/temp/rinha-backend/rinha-backend/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://F:/temp/rinha-backend/rinha-backend/endpoints/ClienteEndpoint.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://F:/temp/rinha-backend/rinha-backend/endpoints/ClienteEndpoint.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://F:/temp/rinha-backend/rinha-backend/repository/RinhaRepository.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://F:/temp/rinha-backend/rinha-backend/script.sql" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 6
@@ -138,15 +141,27 @@
       <workItem from="1716123233378" duration="8418000" />
       <workItem from="1716137910163" duration="704000" />
       <workItem from="1716154670912" duration="1818000" />
-      <workItem from="1716158373202" duration="1658000" />
+      <workItem from="1716158373202" duration="1809000" />
     </task>
+    <task id="LOCAL-00001" summary="things">
+      <option name="closed" value="true" />
+      <created>1716160655078</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1716160655078</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="things" />
+    <option name="LAST_COMMIT_MESSAGE" value="things" />
   </component>
 </project>
